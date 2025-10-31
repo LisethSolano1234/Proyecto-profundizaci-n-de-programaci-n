@@ -1,8 +1,10 @@
 package com.proyecto.vehiculos.model;
-import jakarta.persistence.FetchType;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -14,14 +16,18 @@ public class VehiculoPersona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private LocalDate fechaAsociacion;
+
+    @Column(nullable = false, length = 2)
     private String estado; // PO, EA, RO
 
-    @ManyToOne
-    @JoinColumn(name = "vehiculo_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehiculo_id", nullable = false)
     private Vehiculo vehiculo;
 
-    @ManyToOne
-    @JoinColumn(name = "persona_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "persona_id", nullable = false)
     private Persona persona;
 }
+
 

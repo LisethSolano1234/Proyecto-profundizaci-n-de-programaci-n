@@ -1,5 +1,6 @@
 package com.proyecto.vehiculos.controller;
 
+import com.proyecto.vehiculos.model.Persona;
 import com.proyecto.vehiculos.model.VehiculoPersona;
 import com.proyecto.vehiculos.repository.VehiculoPersonaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,17 +19,17 @@ public class VehiculoPersonaController {
     @Autowired
     private VehiculoPersonaRepository vehiculoPersonaRepository;
 
-    // Listar todas las relaciones
+    //  Listar todas las relaciones
     @GetMapping
     public ResponseEntity<List<VehiculoPersona>> listarRelaciones() {
         List<VehiculoPersona> relaciones = vehiculoPersonaRepository.findAll();
         if (relaciones.isEmpty()) {
-            return ResponseEntity.noContent().build(); // 204 No Content si no hay registros
+            return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(relaciones); // 200 OK con la lista
+        return ResponseEntity.ok(relaciones);
     }
 
-    // Buscar una relación por ID
+    //  Buscar relación por ID
     @GetMapping("/{id}")
     public ResponseEntity<VehiculoPersona> obtenerRelacion(@PathVariable Long id) {
         Optional<VehiculoPersona> relacion = vehiculoPersonaRepository.findById(id);
@@ -35,18 +37,24 @@ public class VehiculoPersonaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Crear una nueva relación vehículo-persona
+    //  Crear nueva relación (solo conductores)
     @PostMapping
-    public ResponseEntity<VehiculoPersona> crearRelacion(@RequestBody VehiculoPersona relacion) {
-        try {
-            VehiculoPersona nuevaRelacion = vehiculoPersonaRepository.save(relacion);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevaRelacion);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    public ResponseEntity<?> crearRelacion(@RequestBody VehiculoPersona relacion) {
+        Persona persona = relacion.getPersona();
+
+        if (persona == null || !"C".equalsIgnoreCase(persona.getTipoPersona())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Solo se pueden asociar personas de tipo CONDUCTOR (C)");
         }
+
+        relacion.setFechaAsociacion(LocalDate.now());
+        relacion.setEstado("EA"); // Espera de aprobación por defecto
+
+        VehiculoPersona nuevaRelacion = vehiculoPersonaRepository.save(relacion);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaRelacion);
     }
 
-    // Actualizar una relación existente
+    //  Actualizar relación
     @PutMapping("/{id}")
     public ResponseEntity<VehiculoPersona> actualizarRelacion(
             @PathVariable Long id,
@@ -63,15 +71,33 @@ public class VehiculoPersonaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Eliminar una relación con validación
+    //  Cambiar estado del conductor (PO, EA, RO)
+    @PutMapping("/{id}/estado/{nuevoEstado}")
+    public ResponseEntity<?> cambiarEstadoConductor(
+            @PathVariable Long id,
+            @PathVariable String nuevoEstado) {
+
+        if (!List.of("PO", "EA", "RO").contains(nuevoEstado.toUpperCase())) {
+            return ResponseEntity.badRequest().body("Estado inválido. Usa PO, EA o RO.");
+        }
+
+        return vehiculoPersonaRepository.findById(id)
+                .map(relacion -> {
+                    relacion.setEstado(nuevoEstado.toUpperCase());
+                    vehiculoPersonaRepository.save(relacion);
+                    return ResponseEntity.ok("Estado actualizado correctamente a " + nuevoEstado);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    //  Eliminar relación
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarRelacion(@PathVariable Long id) {
         if (vehiculoPersonaRepository.existsById(id)) {
             vehiculoPersonaRepository.deleteById(id);
             return ResponseEntity.ok("Relación eliminada correctamente");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Relación no encontrada");
         }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Relación no encontrada");
     }
 }

@@ -52,22 +52,25 @@ public class DocumentoController {
      * Actualizar un documento existente.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Documento> actualizarDocumento(@PathVariable Long id, @RequestBody Documento documentoActualizado) {
+    public ResponseEntity<Documento> actualizarDocumento(
+            @PathVariable Long id,
+            @RequestBody Documento documentoActualizado) {
+
         return documentoRepository.findById(id)
-                .map(documento -> {
-                    documento.setTipoDocumento(documentoActualizado.getTipoDocumento());
-                    documento.setFechaEmision(documentoActualizado.getFechaEmision());
-                    documento.setFechaVencimiento(documentoActualizado.getFechaVencimiento());
-                    documento.setArchivo(documentoActualizado.getArchivo());
-                    documento.setVehiculo(documentoActualizado.getVehiculo());
-                    Documento actualizado = documentoRepository.save(documento);
+                .map(doc -> {
+                    doc.setTipoDocumento(documentoActualizado.getTipoDocumento());
+                    doc.setFechaEmision(documentoActualizado.getFechaEmision());
+                    doc.setFechaVencimiento(documentoActualizado.getFechaVencimiento());
+                    doc.setArchivo(documentoActualizado.getArchivo());
+                    doc.setVehiculo(documentoActualizado.getVehiculo());
+                    Documento actualizado = documentoRepository.save(doc);
                     return ResponseEntity.ok(actualizado);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
-     * Eliminar un documento por su ID.
+     * Eliminar un documento por ID.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarDocumento(@PathVariable Long id) {
@@ -78,3 +81,4 @@ public class DocumentoController {
         return ResponseEntity.notFound().build();
     }
 }
+

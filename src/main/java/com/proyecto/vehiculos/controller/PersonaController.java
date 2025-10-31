@@ -1,7 +1,9 @@
 package com.proyecto.vehiculos.controller;
 
 import com.proyecto.vehiculos.model.Persona;
+import com.proyecto.vehiculos.model.Usuario;
 import com.proyecto.vehiculos.repository.PersonaRepository;
+import com.proyecto.vehiculos.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,9 @@ public class PersonaController {
 
     @Autowired
     private PersonaRepository personaRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     // Listar todas las personas
     @GetMapping
@@ -30,7 +35,19 @@ public class PersonaController {
     // Crear nueva persona
     @PostMapping
     public Persona crearPersona(@RequestBody Persona persona) {
-        return personaRepository.save(persona);
+        // Guardar primero la persona
+        Persona nuevaPersona = personaRepository.save(persona);
+
+        // Si la persona es tipo ADMINISTRATIVO (A), crear su usuario automáticamente
+        if ("A".equalsIgnoreCase(persona.getTipoPersona())) {
+            Usuario usuario = new Usuario();
+            usuario.setPersona(nuevaPersona);
+            usuario.setRol("ADMINISTRADOR"); // opcional, puedes usarlo luego para seguridad
+            usuario.generarCredenciales();
+            usuarioRepository.save(usuario);
+        }
+
+        return nuevaPersona;
     }
 
     // Actualizar persona existente
@@ -57,4 +74,3 @@ public class PersonaController {
         personaRepository.deleteById(id);
     }
 }
-

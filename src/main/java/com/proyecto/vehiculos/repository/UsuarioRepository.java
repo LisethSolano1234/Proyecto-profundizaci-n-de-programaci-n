@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
  * Permite realizar operaciones CRUD sobre la tabla 'usuario'.
  */
 @Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+public interface UsuarioRepository extends JpaRepository<Usuario, String> {
 }
