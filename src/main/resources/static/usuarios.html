@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<h1>Usuarios Registrados</h1>
+
+<button onclick="cargarUsuarios()">Cargar Usuarios</button>
+<table id="tablaUsuarios" border="1">
+    <thead>
+    <tr>
+        <th>Login</th>
+        <th>Rol</th>
+        <th>API Key</th>
+        <th>Persona</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<h2>Registrar nuevo usuario</h2>
+<form id="formUsuario" onsubmit="crearUsuario(event)">
+    <input type="text" id="login" placeholder="Login" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="text" id="rol" placeholder="Rol" required>
+    <input type="text" id="personaId" placeholder="ID Persona" required>
+    <button type="submit">Registrar</button>
+</form>
+
+<script src="usuarios.js"></script>
+</body>
+</html>

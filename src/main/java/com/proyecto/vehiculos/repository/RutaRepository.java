@@ -1,13 +1,14 @@
 package com.proyecto.vehiculos.repository;
 
-import com.proyecto.vehiculos.model.Trayecto;
 import com.proyecto.vehiculos.model.Ruta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface TrayectoRepository extends JpaRepository<Trayecto, Long> {
-    List<Trayecto> findByRutaOrderByOrdenParadaAsc(Ruta ruta);
+public interface RutaRepository extends JpaRepository<Ruta, Long> {
+
+    // Buscar ruta por su código
+    Optional<Ruta> findByCodigo(String codigo);
 }

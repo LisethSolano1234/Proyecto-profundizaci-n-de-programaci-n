@@ -1,48 +1,49 @@
 package com.proyecto.vehiculos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDate;
 
+@Entity
 @Getter
 @Setter
-@Entity
 @Table(name = "trayecto")
+@JsonIgnoreProperties({"vehiculo", "persona", "ruta", "hibernateLazyInitializer", "handler"})
 public class Trayecto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String codigoRuta; // Agrupa los trayectos de una misma ruta
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_ruta", nullable = false)
+    private Ruta ruta;  // 🔹 Relación con la entidad Ruta
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
-    private Persona persona; // Solo tipo C (Conductor)
+    private Persona persona;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vehiculo", nullable = false)
-    private Vehiculo vehiculo; // Solo si documentos están habilitados
+    private Vehiculo vehiculo;
 
     @Column(nullable = false)
-    private String ubicacion; // Ejemplo: Conservatorio del Tolima, Ibagué, Tolima
+    private String ubicacion;
 
-    @Column(nullable = false)
-    private Integer ordenParada; // 0 = inicial, >0 = intermedia, mayor = final
+    @Column(name = "orden_parada", nullable = false)
+    private int ordenParada;
 
     private Double latitud;
     private Double longitud;
 
-    @Column(nullable = false)
-    private String loginRegistro; // Usuario que registra el trayecto
+    @Column(name = "login_registro", nullable = false)
+    private String loginRegistro;
 
-    // Fecha en que inicia el trayecto
+    @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
 
-    // Fecha en que termina el trayecto
+    @Column(name = "fecha_fin")
     private LocalDate fechaFin;
-
 }

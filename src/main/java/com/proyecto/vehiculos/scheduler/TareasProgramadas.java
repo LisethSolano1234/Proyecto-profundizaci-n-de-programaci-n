@@ -95,13 +95,22 @@ public class TareasProgramadas {
 
         for (Trayecto t : trayectos) {
             if (t.getLatitud() == null || t.getLongitud() == null) {
-                t.setLatitud(Math.random() * 5 + 4); // Latitud simulada
-                t.setLongitud(Math.random() * -76 - 73); // Longitud simulada
+                // Coordenadas simuladas dentro de Colombia 🇨🇴
+                double latitudColombia = 1.0 + Math.random() * (13.0 - 1.0); // entre 1° y 13° N
+                double longitudColombia = -(66.0 + Math.random() * (79.0 - 66.0)); // entre -66° y -79° O
+
+                t.setLatitud((double) latitudColombia);
+                t.setLongitud((double) longitudColombia);
+
                 trayectoRepository.save(t);
-                System.out.println(" Coordenadas simuladas agregadas a trayecto ID " + t.getId());
+
+                System.out.println(" Las Coordenadas simuladas (Colombia) asignadas a trayecto ID " + t.getId() +
+                        " -> Lat: " + latitudColombia + ", Lng: " + longitudColombia);
             }
         }
     }
+
+
     /**
      * Cada día a la medianoche: elimina trayectos con más de 30 días de antigüedad.
      * Esta tarea limpia la base de datos automáticamente.
