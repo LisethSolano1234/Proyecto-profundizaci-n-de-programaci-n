@@ -139,31 +139,31 @@ TRUNCATE TABLE usuario;
 TRUNCATE TABLE persona;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 🔹 Personas
+--  Personas
 INSERT INTO persona (nombre, apellido, numero_identificacion, tipo_identificacion, tipo_persona, telefono, correo, vigencia_licencia)
 VALUES
 ('Laura', 'Rojas', '1001', 'CC', 'C', '3115551001', 'laura.rojas@example.com', '2024-01-01'), -- Licencia vencida
 ('Pedro', 'Mejía', '1002', 'CC', 'C', '3125551002', 'pedro.mejia@example.com', '2026-12-31'); -- Licencia vigente
 
--- 🔹 Vehículos
+--  Vehículos
 INSERT INTO vehiculo (placa, marca, modelo, linea, color, capacidad_pasajeros, tipo_vehiculo, tipo_servicio, tipo_combustible)
 VALUES
 ('ABC123', 'Toyota', 2020, 'Corolla', 'Rojo', 5, 'Automóvil', 'Privado', 'Gasolina'),
 ('XYZ987', 'Yamaha', 2022, 'FZ', 'Negro', 2, 'Motocicleta', 'Privado', 'Gasolina');
 
--- 🔹 Documentos
+--  Documentos
 INSERT INTO documento (codigo, nombre, tipo_vehiculo, requerido, descripcion, tipo_documento, fecha_emision, fecha_vencimiento, estado_documento, vehiculo_id)
 VALUES
 ('SOAT01', 'SOAT Toyota', 'A', 'RA', 'Seguro obligatorio', 'SOAT', '2023-01-01', '2024-01-01', 'HABILITADO', 1), -- Vencido
 ('TEC02', 'Técnico Mecánica Yamaha', 'M', 'RA', 'Revisión mecánica', 'TEC', '2024-06-01', '2026-06-01', 'HABILITADO', 2); -- Vigente
 
--- 🔹 Asociaciones vehículo-persona
+--  Asociaciones vehículo-persona
 INSERT INTO vehiculo_persona (fecha_asociacion, estado, vehiculo_id, persona_id)
 VALUES
 ('2023-05-01', 'EA', 1, 1),
 ('2024-01-01', 'PO', 2, 2);
 
--- 🔹 Trayectos (uno sin coordenadas)
+--  Trayectos (uno sin coordenadas)
 INSERT INTO trayecto (codigo_ruta, id_persona, id_vehiculo, ubicacion, orden_parada, login_registro, latitud, longitud)
 VALUES
 ('RUTA001', 1, 1, 'Conservatorio del Tolima', 0, 'admin', NULL, NULL),
