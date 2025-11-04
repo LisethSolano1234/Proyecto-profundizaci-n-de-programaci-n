@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/trayectos")
+@RequestMapping("/api/trayectos") //  Ajuste: usa prefijo /api/ para coherencia con el resto
 @CrossOrigin(origins = "*")
 public class TrayectoController {
 
@@ -22,13 +22,13 @@ public class TrayectoController {
     @Autowired
     private RutaRepository rutaRepository;
 
-    // 🔹 1. Obtener todos los trayectos
+    // 1. Obtener todos los trayectos
     @GetMapping
     public List<Trayecto> obtenerTodos() {
         return trayectoRepository.findAll();
     }
 
-    // 🔹 2. Obtener trayectos por código de ruta
+    // 2. Obtener trayectos por código de ruta
     @GetMapping("/ruta/{codigoRuta}")
     public ResponseEntity<List<Trayecto>> obtenerPorCodigoRuta(@PathVariable String codigoRuta) {
         Optional<Ruta> ruta = rutaRepository.findByCodigo(codigoRuta);
@@ -44,7 +44,17 @@ public class TrayectoController {
         return ResponseEntity.ok(trayectos);
     }
 
-    // 🔹 3. Guardar trayectos desde el mapa
+    // 3. Obtener trayectos por ID de vehículo
+    @GetMapping("/vehiculo/{idVehiculo}")
+    public ResponseEntity<List<Trayecto>> obtenerPorIdVehiculo(@PathVariable Long idVehiculo) {
+        List<Trayecto> trayectos = trayectoRepository.findByVehiculoIdOrderByOrdenParadaAsc(idVehiculo);
+        if (trayectos.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(trayectos);
+    }
+
+    // 4. Guardar trayectos desde el mapa (por si los agregas dinámicamente)
     @PostMapping("/guardar")
     public ResponseEntity<?> guardarTrayectos(@RequestBody List<Trayecto> trayectos) {
         try {

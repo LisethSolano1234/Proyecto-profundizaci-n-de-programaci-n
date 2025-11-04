@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface TrayectoRepository extends JpaRepository<Trayecto, Long> {
     List<Trayecto> findByRutaOrderByOrdenParadaAsc(Ruta ruta);
+
+    List<Trayecto> findByVehiculoIdOrderByOrdenParadaAsc(Long idVehiculo);
 }

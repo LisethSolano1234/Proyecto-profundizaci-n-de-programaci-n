@@ -1,28 +1,20 @@
 package com.proyecto.vehiculos.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private AuthInterceptor authInterceptor;
-
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authInterceptor)
-                .addPathPatterns(
-                        "/api/rutas/**",
-                        "/api/conductores/**",
-                        "/api/vehiculos/**"
-                ) // Endpoints protegidos
-                .excludePathPatterns(
-                        "/trayectos/**",
-                        "/public/**"
-                ); // Endpoints públicos
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*") // permite peticiones desde cualquier origen (puedes limitarlo a tu front)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization")
+                .allowCredentials(false)
+                .maxAge(3600);
     }
 }
-

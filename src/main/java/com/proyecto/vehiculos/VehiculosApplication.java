@@ -10,6 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class VehiculosApplication {
     public static void main(String[] args) {
         SpringApplication.run(VehiculosApplication.class, args);
-        System.out.println("✅ Aplicación iniciada correctamente con tareas programadas habilitadas.");
+        System.out.println(" Aplicación iniciada correctamente con tareas programadas habilitadas.");
     }
 }

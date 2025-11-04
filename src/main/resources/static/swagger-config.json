@@ -1,0 +1,13 @@
+{
+  "urls": [
+    {
+      "url": "/v3/api-docs",
+      "name": "Gestión de Vehículos API"
+    }
+  ],
+  "validatorUrl": null,
+  "persistAuthorization": true,
+  "plugins": [
+    "LoginPlugin"
+  ]
+}

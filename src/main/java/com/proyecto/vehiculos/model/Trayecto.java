@@ -19,7 +19,7 @@ public class Trayecto {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ruta", nullable = false)
-    private Ruta ruta;  // 🔹 Relación con la entidad Ruta
+    private Ruta ruta;  //  Relación con la entidad Ruta
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)

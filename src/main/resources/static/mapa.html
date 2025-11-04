@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastreo de Vehículos</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+          margin: 0;
+          font-family: 'Poppins', sans-serif;
+          display: flex;
+          height: 100vh;
+          background-color: #f5f5f5;
+        }
+
+        /* Panel lateral */
+        #sidebar {
+          width: 280px;
+          background: #ffffff;
+          box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          border-right: 1px solid #e0e0e0;
+        }
+
+        #sidebar h2 {
+          margin: 0;
+          font-size: 18px;
+          color: #1e88e5;
+        }
+
+        input, button {
+          padding: 8px 10px;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+          font-size: 14px;
+        }
+
+        button {
+          background-color: #1e88e5;
+          color: white;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        button:hover {
+          background-color: #1565c0;
+        }
+
+        #map {
+          flex: 1;
+        }
+
+        .divider {
+          border-top: 1px solid #ddd;
+          margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2> Rastreo</h2>
+
+    <input id="searchBox" type="text" placeholder="Buscar lugar...">
+    <button id="addStop"> Agregar punto</button>
+    <button id="drawRoute">️ Ver ruta</button>
+    <div class="divider"></div>
+    <button id="clearRoute"> Limpiar ruta</button>
+</div>
+
+<div id="map"></div>
+
+<script>
+    let map, directionsService, directionsRenderer;
+    let stops = [];
+    let markers = [];
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 4.60971, lng: -74.08175 }, // Bogotá
+        zoom: 12,
+        mapTypeControl: false,
+      });
+
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer({ map });
+
+      const input = document.getElementById("searchBox");
+      const autocomplete = new google.maps.places.Autocomplete(input);
+      autocomplete.bindTo("bounds", map);
+
+      document.getElementById("addStop").addEventListener("click", () => {
+        const place = autocomplete.getPlace();
+        if (!place || !place.geometry) {
+          alert("Selecciona una ubicación válida de la lista.");
+          return;
+        }
+        const location = place.geometry.location;
+        stops.push(location);
+
+        const marker = new google.maps.Marker({
+          position: location,
+          map,
+          label: `${stops.length}`,
+        });
+        markers.push(marker);
+
+        map.panTo(location);
+      });
+
+      document.getElementById("drawRoute").addEventListener("click", drawRoute);
+      document.getElementById("clearRoute").addEventListener("click", clearRoute);
+    }
+
+    function drawRoute() {
+      if (stops.length < 2) {
+        alert("Agrega al menos dos puntos para generar una ruta.");
+        return;
+      }
+
+      const waypoints = stops.slice(1, -1).map(loc => ({ location: loc }));
+      directionsService.route({
+        origin: stops[0],
+        destination: stops[stops.length - 1],
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+      })
+      .then(result => directionsRenderer.setDirections(result))
+      .catch(() => alert("No se pudo generar la ruta."));
+    }
+
+    function clearRoute() {
+      stops = [];
+      directionsRenderer.setDirections({ routes: [] });
+      markers.forEach(m => m.setMap(null));
+      markers = [];
+    }
+</script>
+
+<!-- Carga del API de Google Maps -->
+<script async
+        src="https://maps.googleapis.com/maps/api/js?AIzaSyCfjRseAP7-5imP790nfukJGGAXB0Ft-zA&libraries=places&callback=initMap">
+</script>
+
+</body>
+</html>
