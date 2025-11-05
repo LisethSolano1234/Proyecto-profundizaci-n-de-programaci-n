@@ -103,4 +103,19 @@ public class UsuarioController {
         usuarioRepository.delete(usuario);
         return ResponseEntity.noContent().build();
     }
+    // 🔒 Endpoint protegido por API Key
+    @GetMapping("/protegido")
+    public ResponseEntity<?> ejemplo(@RequestHeader("x-api-key") String apiKey) {
+        Usuario user = usuarioRepository.findAll().stream()
+                .filter(u -> apiKey.equals(u.getApiKey()))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.status(401).body(" API Key inválida o no registrada");
+        }
+
+        return ResponseEntity.ok(" Acceso permitido. Usuario: " + user.getLogin());
+    }
+
 }

@@ -28,7 +28,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/mapa.html",          //  acceso público al mapa
                                 "/js/**",              // si tienes scripts JS
-                                "/css/**"           // si tienes estilos
+                                "/css/**",           // si tienes estilos
+                                "/usuarios/protegido"
                         ).permitAll()
 
                         .anyRequest().authenticated()

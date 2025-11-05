@@ -1,12 +1,15 @@
--- RECREACIÓN COMPLETA DE LA BASE DE DATOS SINCRONIZADA CON EL CÓDIGO JAVA
+-- ===========================================
+-- RECREACION COMPLETA DE LA BASE DE DATOS
+-- COMPATIBLE CON EL CODIGO DEL PROYECTO VEHICULOS
+-- ===========================================
 
 DROP DATABASE IF EXISTS vehiculosdb;
-CREATE DATABASE vehiculosdb;
+CREATE DATABASE vehiculosdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE vehiculosdb;
 
--- =========================
+-- ===========================================
 -- TABLA PERSONA
--- =========================
+-- ===========================================
 CREATE TABLE persona (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
@@ -20,9 +23,9 @@ CREATE TABLE persona (
   vigencia_licencia DATE
 );
 
--- =========================
+-- ===========================================
 -- TABLA VEHÍCULO
--- =========================
+-- ===========================================
 CREATE TABLE vehiculo (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   placa VARCHAR(6) NOT NULL UNIQUE,
@@ -36,9 +39,9 @@ CREATE TABLE vehiculo (
   linea VARCHAR(50)
 );
 
--- =========================
+-- ===========================================
 -- TABLA DOCUMENTO
--- =========================
+-- ===========================================
 CREATE TABLE documento (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   codigo VARCHAR(100) NOT NULL UNIQUE,
@@ -57,9 +60,9 @@ CREATE TABLE documento (
     ON DELETE CASCADE
 );
 
--- =========================
---  RELACIÓN VEHÍCULO - PERSONA
--- =========================
+-- ===========================================
+-- RELACIÓN VEHÍCULO - PERSONA
+-- ===========================================
 CREATE TABLE vehiculo_persona (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   fecha_asociacion DATE,
@@ -74,18 +77,18 @@ CREATE TABLE vehiculo_persona (
     ON DELETE CASCADE
 );
 
--- =========================
+-- ===========================================
 -- TABLA RUTA
--- =========================
+-- ===========================================
 CREATE TABLE ruta (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   codigo VARCHAR(100) NOT NULL UNIQUE,
   descripcion VARCHAR(255) NOT NULL
 );
 
--- =========================
--- TABLA TRAYECTO (ARREGLADA)
--- =========================
+-- ===========================================
+-- TABLA TRAYECTO
+-- ===========================================
 CREATE TABLE trayecto (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   id_ruta BIGINT NOT NULL,
@@ -109,9 +112,23 @@ CREATE TABLE trayecto (
     ON DELETE CASCADE
 );
 
--- =========================
+-- ===========================================
+-- TABLA USUARIO (FALTABA EN TU SCRIPT)
+-- ===========================================
+CREATE TABLE usuario (
+  login VARCHAR(100) PRIMARY KEY,
+  password VARCHAR(100),
+  api_key VARCHAR(100),
+  rol VARCHAR(50),
+  persona_id BIGINT NOT NULL,
+  CONSTRAINT fk_usuario_persona FOREIGN KEY (persona_id)
+    REFERENCES persona(id)
+    ON DELETE CASCADE
+);
+
+-- ===========================================
 -- DATOS DE PRUEBA
--- =========================
+-- ===========================================
 
 -- Persona administrativa
 INSERT INTO persona (nombre, apellido, tipo_identificacion, numero_identificacion, correo, telefono, tipo_persona)
@@ -137,22 +154,24 @@ VALUES (CURDATE(), 'EA', 1, 2);
 INSERT INTO ruta (codigo, descripcion)
 VALUES ('RUTA-002', 'Ruta principal de prueba');
 
--- Trayectos asociados correctamente a id_ruta
+-- Trayectos asociados
 INSERT INTO trayecto (fecha_inicio, fecha_fin, latitud, longitud, orden_parada, id_persona, id_vehiculo, id_ruta, login_registro, ubicacion)
-VALUES 
-('2025-11-02', '2025-11-02', 4.44530452335443, -75.24342910353239, 1, 2, 1, 1, 'admin', 'Alcaldía de Ibagué'),
-('2025-11-02', '2025-11-02', 4.444210947630705, -75.24209427654772, 2, 2, 1, 1, 'admin', 'Gobernación del Tolima'),
-('2025-11-02', '2025-11-02', 4.44347096137032, -75.24030950101361, 3, 2, 1, 1, 'admin', 'Centro Comercial Combeima'),
-('2025-11-02', '2025-11-02', 4.446755939154615, -75.2418519157435, 4, 2, 1, 1, 'admin', 'Concha Acústica'),
+VALUES
+('2025-11-02', '2025-11-02', 4.4453, -75.2434, 1, 2, 1, 1, 'admin', 'Alcaldía de Ibagué'),
+('2025-11-02', '2025-11-02', 4.4442, -75.2420, 2, 2, 1, 1, 'admin', 'Gobernación del Tolima'),
+('2025-11-02', '2025-11-02', 4.4434, -75.2403, 3, 2, 1, 1, 'admin', 'Centro Comercial Combeima'),
+('2025-11-02', '2025-11-02', 4.4467, -75.2418, 4, 2, 1, 1, 'admin', 'Concha Acústica'),
 ('2025-11-02', '2025-11-02', 4.4470, -75.2430, 5, 2, 1, 1, 'admin', 'Parque Deportivo de Ibagué');
 
--- =========================
+-- Usuario ADMINISTRADOR (para login)
+INSERT INTO usuario (login, password, api_key, rol, persona_id)
+VALUES ('admin', '1234', UUID(), 'ADMIN', 1);
+
+-- ===========================================
 -- CONSULTAS DE VERIFICACIÓN
--- =========================
+-- ===========================================
 SELECT * FROM persona;
 SELECT * FROM vehiculo;
 SELECT * FROM ruta;
 SELECT * FROM trayecto;
-
-
-
+SELECT * FROM usuario;

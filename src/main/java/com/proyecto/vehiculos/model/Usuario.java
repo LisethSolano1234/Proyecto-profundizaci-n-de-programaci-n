@@ -34,6 +34,8 @@ public class Usuario {
         this.password = "abcd1234";
         this.apiKey = UUID.randomUUID().toString();
     }
+
+
 }
 
 
