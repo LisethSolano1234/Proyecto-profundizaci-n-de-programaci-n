@@ -29,7 +29,9 @@ public class SecurityConfig {
                                 "/mapa.html",          //  acceso público al mapa
                                 "/js/**",              // si tienes scripts JS
                                 "/css/**",           // si tienes estilos
-                                "/usuarios/protegido"
+                                "/usuarios/protegido",
+                                "/api/pdf/vehiculos",
+                                "api/excel/documentos"
                         ).permitAll()
 
                         .anyRequest().authenticated()
