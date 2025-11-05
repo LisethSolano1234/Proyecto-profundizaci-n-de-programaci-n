@@ -32,7 +32,7 @@
           text-align: center;
         }
 
-        input, button, select {
+        input, button {
           padding: 8px;
           font-size: 14px;
           border-radius: 6px;
@@ -91,52 +91,40 @@
 
 <body>
 <div id="sidebar">
-    <h2>🚗 Rastreo de Vehículos</h2>
-
+    <h2>Rastreo de Vehículos</h2>
     <input id="searchBox" type="text" placeholder="Buscar lugar..." />
     <button id="addStop">Agregar punto</button>
-    <button id="drawRoute">Ver ruta manual</button>
+    <button id="drawRoute">Ver ruta</button>
     <button id="clearLast">Eliminar última ruta</button>
     <button id="clearAll">Limpiar todo</button>
-
-    <hr />
-
-    <input id="inputCedula" type="text" placeholder="Cédula del conductor" />
-    <button onclick="mostrarRutasConductor()">🔍 Ver rutas del conductor</button>
-    <button onclick="mostrarRutasRestringidas()">🚫 Ver rutas restringidas</button>
-
     <div class="info-distancia" id="distanciaTotal">Distancia total: 0 km</div>
-
     <h3>Historial de rutas</h3>
     <div id="historial"></div>
 </div>
 
 <div id="map"></div>
 
+<!-- Google Maps API -->
 <script
         async
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_4kerUw5j7gsmO5qhGK9CxnAxygO7hag&libraries=places&callback=initMap">
 </script>
 
 <script>
-    let map, directionsService, directionsRenderer;
+    let map, directionsService;
     let stops = [];
     let markers = [];
     let rutasGuardadas = [];
     let colorIndex = 0;
-    let polylines = [];
-
-    // =====================
-    //   INICIALIZAR MAPA
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 4.65, lng: -74.1 }, // Bogotá
+        center: { lat: 4.4389, lng: -75.2322 }, // Ibagué
         zoom: 13,
+        mapTypeControl: true,
       });
 
       directionsService = new google.maps.DirectionsService();
-      directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
       const input = document.getElementById("searchBox");
       const autocomplete = new google.maps.places.Autocomplete(input);
@@ -165,9 +153,6 @@
       document.getElementById("clearAll").addEventListener("click", clearAll);
     }
 
-    // =====================
-    //   RUTA MANUAL (local)
-    // =====================
     function drawRoute() {
       if (stops.length < 2) {
         alert("Agrega al menos dos puntos.");
@@ -184,16 +169,41 @@
 
       directionsService.route(request, (result, status) => {
         if (status === "OK") {
+          const color = getColor();
+          const path = result.routes[0].overview_path;
+
+          // Dibujar la línea
           const polyline = new google.maps.Polyline({
-            path: result.routes[0].overview_path,
-            strokeColor: getColor(),
+            path: path,
+            strokeColor: color,
             strokeOpacity: 0.8,
             strokeWeight: 5,
             map: map
           });
 
+          // Marcadores de inicio y fin
+          const startMarker = new google.maps.Marker({
+            position: path[0],
+            map: map,
+            icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+            title: "Inicio del trayecto"
+          });
+
+          const endMarker = new google.maps.Marker({
+            position: path[path.length - 1],
+            map: map,
+            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+            title: "Fin del trayecto"
+          });
+
+          const infoStart = new google.maps.InfoWindow({ content: "<b>Inicio del trayecto</b>" });
+          const infoEnd = new google.maps.InfoWindow({ content: "<b>Fin del trayecto</b>" });
+
+          startMarker.addListener("click", () => infoStart.open(map, startMarker));
+          endMarker.addListener("click", () => infoEnd.open(map, endMarker));
+
           const distance = calcularDistancia(result);
-          rutasGuardadas.push({ result, polyline, distance });
+          rutasGuardadas.push({ result, polyline, distance, color, startMarker, endMarker });
 
           mostrarHistorial();
           mostrarDistanciaTotal();
@@ -225,7 +235,11 @@
         const div = document.createElement("div");
         div.classList.add("ruta-item");
         div.innerHTML = `Ruta ${i + 1} - ${r.distance} km`;
-        div.onclick = () => r.polyline.setMap(map);
+        div.onclick = () => {
+          map.fitBounds(new google.maps.LatLngBounds(
+            ...r.result.routes[0].overview_path
+          ));
+        };
         historial.appendChild(div);
       });
     }
@@ -237,95 +251,27 @@
 
     function clearLastRoute() {
       const ultima = rutasGuardadas.pop();
-      if (ultima) ultima.polyline.setMap(null);
+      if (ultima) {
+        ultima.polyline.setMap(null);
+        ultima.startMarker.setMap(null);
+        ultima.endMarker.setMap(null);
+      }
       mostrarHistorial();
       mostrarDistanciaTotal();
     }
 
     function clearAll() {
-      rutasGuardadas.forEach(r => r.polyline.setMap(null));
+      rutasGuardadas.forEach(r => {
+        r.polyline.setMap(null);
+        r.startMarker.setMap(null);
+        r.endMarker.setMap(null);
+      });
       rutasGuardadas = [];
       stops = [];
       markers.forEach(m => m.setMap(null));
       markers = [];
-      polylines.forEach(p => p.setMap(null));
-      polylines = [];
       mostrarHistorial();
       mostrarDistanciaTotal();
-    }
-
-    // =====================
-    //   RUTAS DESDE BACKEND
-    // =====================
-    async function mostrarRutasConductor() {
-      const cedula = document.getElementById("inputCedula").value;
-      if (!cedula) {
-        alert("Por favor ingrese el número de identificación del conductor");
-        return;
-      }
-
-      clearAll();
-      const response = await fetch(`http://localhost:8080/api/trayectos/conductor/${cedula}`);
-      if (!response.ok) {
-        alert("No se encontraron rutas para este conductor");
-        return;
-      }
-
-      const trayectos = await response.json();
-      const path = trayectos.map(t => ({ lat: t.latitud, lng: t.longitud }));
-
-      const polyline = new google.maps.Polyline({
-        path,
-        map,
-        strokeColor: "#007bff",
-        strokeOpacity: 0.8,
-        strokeWeight: 4
-      });
-      polylines.push(polyline);
-
-      trayectos.forEach(t => {
-        const marker = new google.maps.Marker({
-          position: { lat: t.latitud, lng: t.longitud },
-          map,
-          title: `${t.ubicacion} (${t.ruta.codigo})`
-        });
-        markers.push(marker);
-      });
-
-      map.fitBounds(new google.maps.LatLngBounds(...path.map(p => new google.maps.LatLng(p))));
-    }
-
-    async function mostrarRutasRestringidas() {
-      clearAll();
-      const response = await fetch(`http://localhost:8080/api/trayectos/restricciones`);
-      if (!response.ok) {
-        alert("No hay rutas restringidas");
-        return;
-      }
-
-      const trayectos = await response.json();
-      const path = trayectos.map(t => ({ lat: t.latitud, lng: t.longitud }));
-
-      const polyline = new google.maps.Polyline({
-        path,
-        map,
-        strokeColor: "#ff0000",
-        strokeOpacity: 0.8,
-        strokeWeight: 4
-      });
-      polylines.push(polyline);
-
-      trayectos.forEach(t => {
-        const marker = new google.maps.Marker({
-          position: { lat: t.latitud, lng: t.longitud },
-          map,
-          icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-          title: `Restricción: ${t.ubicacion}`
-        });
-        markers.push(marker);
-      });
-
-      map.fitBounds(new google.maps.LatLngBounds(...path.map(p => new google.maps.LatLng(p))));
     }
 </script>
 </body>
