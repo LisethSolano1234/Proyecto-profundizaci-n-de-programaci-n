@@ -117,5 +117,14 @@ public class UsuarioController {
 
         return ResponseEntity.ok(" Acceso permitido. Usuario: " + user.getLogin());
     }
+    @GetMapping("/validar-api")
+    public ResponseEntity<?> validarApi(@RequestHeader("x-api-key") String apiKey) {
+        Usuario usuario = usuarioRepository.findAll().stream()
+                .filter(u -> apiKey.equals(u.getApiKey()))
+                .findFirst().orElse(null);
+        if (usuario == null) return ResponseEntity.status(403).body("API Key inválida");
+        return ResponseEntity.ok("Acceso permitido al usuario: " + usuario.getLogin());
+    }
+
 
 }
