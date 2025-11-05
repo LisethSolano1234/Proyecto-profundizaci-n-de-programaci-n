@@ -113,7 +113,7 @@ CREATE TABLE trayecto (
 );
 
 -- ===========================================
--- TABLA USUARIO (FALTABA EN TU SCRIPT)
+-- TABLA USUARIO
 -- ===========================================
 CREATE TABLE usuario (
   login VARCHAR(100) PRIMARY KEY,
