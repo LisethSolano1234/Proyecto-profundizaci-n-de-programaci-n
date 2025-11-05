@@ -1,22 +1,24 @@
 package com.proyecto.vehiculos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.time.LocalDate;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "documento")
+@JsonIgnoreProperties({"vehiculo"}) //  evita el bucle JSON y limpia el Swagger
 public class Documento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Código único generado automáticamente
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String codigo;
 
     @Column(nullable = false)
@@ -25,41 +27,23 @@ public class Documento {
     @Column(nullable = false)
     private String tipoDocumento;
 
-    private String tipoVehiculo;  // A, M, AM
-    private String requerido;     // RA, RM, RR
+    private String tipoVehiculo;
+    private String requerido;
     private String descripcion;
 
     private LocalDate fechaEmision;
     private LocalDate fechaVencimiento;
 
     @Lob
-    @Column(columnDefinition = "LONGBLOB")
     private byte[] archivo;
 
-    @Column(name = "estado_documento", nullable = false)
-    private String estadoDocumento; // Habilitado, En verificación, etc.
+    @Column(nullable = false)
+    private String estadoDocumento = "EN VERIFICACION";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehiculo_id", nullable = false)
+    @JsonIgnoreProperties({"documentos", "vehiculoPersonas"}) //  solo muestra datos básicos del vehículo
     private Vehiculo vehiculo;
-
-    // ⚡ Genera automáticamente código y estado antes de guardar
-    @PrePersist
-    private void prePersist() {
-        if (codigo == null || codigo.isEmpty()) {
-            String prefijo = (tipoDocumento != null && tipoDocumento.length() >= 3)
-                    ? tipoDocumento.substring(0, 3).toUpperCase()
-                    : "DOC";
-            codigo = prefijo + "-" + System.currentTimeMillis();
-        }
-
-        if (estadoDocumento == null || estadoDocumento.isEmpty()) {
-            estadoDocumento = "EN VERIFICACION";
-        }
-    }
 }
-
-
-
 
 

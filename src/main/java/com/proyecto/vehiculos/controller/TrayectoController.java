@@ -54,7 +54,7 @@ public class TrayectoController {
         return ResponseEntity.ok(trayectos);
     }
 
-    // 4. Guardar trayectos desde el mapa (por si los agregas dinámicamente)
+    // 4. Guardar trayectos desde el mapa
     @PostMapping("/guardar")
     public ResponseEntity<?> guardarTrayectos(@RequestBody List<Trayecto> trayectos) {
         try {
@@ -64,7 +64,7 @@ public class TrayectoController {
             return ResponseEntity.internalServerError().body("Error al guardar los trayectos: " + e.getMessage());
         }
     }
-    // === NUEVO MÉTODO ===
+    // === NUEVO METODO ===
     @GetMapping("/conductor/{numeroIdentificacion}")
     public ResponseEntity<?> obtenerRutasPorConductor(@PathVariable String numeroIdentificacion) {
         List<Trayecto> trayectos = trayectoRepository.findAll();
