@@ -81,4 +81,14 @@ public class Vehiculo {
 
     public List<VehiculoPersona> getVehiculoPersonas() { return vehiculoPersonas; }
     public void setVehiculoPersonas(List<VehiculoPersona> vehiculoPersonas) { this.vehiculoPersonas = vehiculoPersonas; }
+
+    @PrePersist
+    private void validarPlaca() {
+        if ("Automóvil".equalsIgnoreCase(tipoVehiculo) && !placa.matches("^[A-Z]{3}\\d{3}$")) {
+            throw new IllegalArgumentException("Placa inválida para automóvil. Ejemplo: ABC123");
+        } else if ("Motocicleta".equalsIgnoreCase(tipoVehiculo) && !placa.matches("^[A-Z]{3}\\d{2}[A-Z]{1}$")) {
+            throw new IllegalArgumentException("Placa inválida para motocicleta. Ejemplo: ABC12D");
+        }
+    }
+
 }

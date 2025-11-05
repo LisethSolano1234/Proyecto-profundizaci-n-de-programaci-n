@@ -44,4 +44,16 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        HttpSecurity httpSecurity = http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()  // login/register
+                        .requestMatchers("/api/trayectos/**").authenticated() // protegidos
+                        .anyRequest().permitAll()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt());// si usas JWT
+        return http.build();
+    }
+
 }

@@ -1,44 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rastreo de Vehículos</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Rutas - Google Maps</title>
 
     <style>
         body {
           margin: 0;
-          font-family: 'Poppins', sans-serif;
           display: flex;
           height: 100vh;
+          font-family: "Poppins", sans-serif;
           background-color: #f5f5f5;
         }
 
-        /* Panel lateral */
         #sidebar {
-          width: 280px;
-          background: #ffffff;
-          box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-          padding: 15px;
+          width: 320px;
+          background: white;
+          border-right: 1px solid #ddd;
+          padding: 20px;
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          border-right: 1px solid #e0e0e0;
+          gap: 12px;
+          box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         #sidebar h2 {
-          margin: 0;
+          margin: 0 0 10px 0;
           font-size: 18px;
-          color: #1e88e5;
+          color: #1565c0;
+          text-align: center;
         }
 
-        input, button {
-          padding: 8px 10px;
+        input, button, select {
+          padding: 8px;
+          font-size: 14px;
           border-radius: 6px;
           border: 1px solid #ccc;
-          font-size: 14px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         button {
@@ -46,7 +46,7 @@
           color: white;
           border: none;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: 0.3s;
         }
 
         button:hover {
@@ -55,38 +55,84 @@
 
         #map {
           flex: 1;
+          height: 100%;
+          width: 100%;
         }
 
-        .divider {
+        #historial {
+          flex: 1;
+          overflow-y: auto;
+          max-height: 200px;
           border-top: 1px solid #ddd;
-          margin: 10px 0;
+          padding-top: 10px;
+        }
+
+        .ruta-item {
+          background: #f8f9fa;
+          padding: 8px;
+          border-radius: 5px;
+          margin-bottom: 6px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        .ruta-item:hover {
+          background: #e3f2fd;
+        }
+
+        .info-distancia {
+          text-align: center;
+          margin-top: 5px;
+          font-weight: 600;
+          color: #333;
         }
     </style>
 </head>
+
 <body>
-
 <div id="sidebar">
-    <h2> Rastreo</h2>
+    <h2>🚗 Rastreo de Vehículos</h2>
 
-    <input id="searchBox" type="text" placeholder="Buscar lugar...">
-    <button id="addStop"> Agregar punto</button>
-    <button id="drawRoute">️ Ver ruta</button>
-    <div class="divider"></div>
-    <button id="clearRoute"> Limpiar ruta</button>
+    <input id="searchBox" type="text" placeholder="Buscar lugar..." />
+    <button id="addStop">Agregar punto</button>
+    <button id="drawRoute">Ver ruta manual</button>
+    <button id="clearLast">Eliminar última ruta</button>
+    <button id="clearAll">Limpiar todo</button>
+
+    <hr />
+
+    <input id="inputCedula" type="text" placeholder="Cédula del conductor" />
+    <button onclick="mostrarRutasConductor()">🔍 Ver rutas del conductor</button>
+    <button onclick="mostrarRutasRestringidas()">🚫 Ver rutas restringidas</button>
+
+    <div class="info-distancia" id="distanciaTotal">Distancia total: 0 km</div>
+
+    <h3>Historial de rutas</h3>
+    <div id="historial"></div>
 </div>
 
 <div id="map"></div>
+
+<script
+        async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_4kerUw5j7gsmO5qhGK9CxnAxygO7hag&libraries=places&callback=initMap">
+</script>
 
 <script>
     let map, directionsService, directionsRenderer;
     let stops = [];
     let markers = [];
+    let rutasGuardadas = [];
+    let colorIndex = 0;
+    let polylines = [];
+
+    // =====================
+    //   INICIALIZAR MAPA
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 4.60971, lng: -74.08175 }, // Bogotá
-        zoom: 12,
-        mapTypeControl: false,
+        center: { lat: 4.65, lng: -74.1 }, // Bogotá
+        zoom: 13,
       });
 
       directionsService = new google.maps.DirectionsService();
@@ -99,55 +145,188 @@
       document.getElementById("addStop").addEventListener("click", () => {
         const place = autocomplete.getPlace();
         if (!place || !place.geometry) {
-          alert("Selecciona una ubicación válida de la lista.");
+          alert("Selecciona una ubicación válida.");
           return;
         }
         const location = place.geometry.location;
         stops.push(location);
 
         const marker = new google.maps.Marker({
-          position: location,
           map,
+          position: location,
           label: `${stops.length}`,
         });
         markers.push(marker);
-
         map.panTo(location);
       });
 
       document.getElementById("drawRoute").addEventListener("click", drawRoute);
-      document.getElementById("clearRoute").addEventListener("click", clearRoute);
+      document.getElementById("clearLast").addEventListener("click", clearLastRoute);
+      document.getElementById("clearAll").addEventListener("click", clearAll);
     }
 
+    // =====================
+    //   RUTA MANUAL (local)
+    // =====================
     function drawRoute() {
       if (stops.length < 2) {
-        alert("Agrega al menos dos puntos para generar una ruta.");
+        alert("Agrega al menos dos puntos.");
         return;
       }
 
       const waypoints = stops.slice(1, -1).map(loc => ({ location: loc }));
-      directionsService.route({
+      const request = {
         origin: stops[0],
         destination: stops[stops.length - 1],
         waypoints,
         travelMode: google.maps.TravelMode.DRIVING,
-      })
-      .then(result => directionsRenderer.setDirections(result))
-      .catch(() => alert("No se pudo generar la ruta."));
+      };
+
+      directionsService.route(request, (result, status) => {
+        if (status === "OK") {
+          const polyline = new google.maps.Polyline({
+            path: result.routes[0].overview_path,
+            strokeColor: getColor(),
+            strokeOpacity: 0.8,
+            strokeWeight: 5,
+            map: map
+          });
+
+          const distance = calcularDistancia(result);
+          rutasGuardadas.push({ result, polyline, distance });
+
+          mostrarHistorial();
+          mostrarDistanciaTotal();
+          stops = [];
+        } else {
+          alert("No se pudo generar la ruta.");
+        }
+      });
     }
 
-    function clearRoute() {
+    function getColor() {
+      const colores = ["#1565C0", "#FF5722", "#4CAF50", "#9C27B0", "#FDD835"];
+      const color = colores[colorIndex % colores.length];
+      colorIndex++;
+      return color;
+    }
+
+    function calcularDistancia(result) {
+      let total = 0;
+      const legs = result.routes[0].legs;
+      legs.forEach(l => (total += l.distance.value));
+      return (total / 1000).toFixed(2);
+    }
+
+    function mostrarHistorial() {
+      const historial = document.getElementById("historial");
+      historial.innerHTML = "";
+      rutasGuardadas.forEach((r, i) => {
+        const div = document.createElement("div");
+        div.classList.add("ruta-item");
+        div.innerHTML = `Ruta ${i + 1} - ${r.distance} km`;
+        div.onclick = () => r.polyline.setMap(map);
+        historial.appendChild(div);
+      });
+    }
+
+    function mostrarDistanciaTotal() {
+      const total = rutasGuardadas.reduce((sum, r) => sum + parseFloat(r.distance), 0);
+      document.getElementById("distanciaTotal").innerText = `Distancia total: ${total.toFixed(2)} km`;
+    }
+
+    function clearLastRoute() {
+      const ultima = rutasGuardadas.pop();
+      if (ultima) ultima.polyline.setMap(null);
+      mostrarHistorial();
+      mostrarDistanciaTotal();
+    }
+
+    function clearAll() {
+      rutasGuardadas.forEach(r => r.polyline.setMap(null));
+      rutasGuardadas = [];
       stops = [];
-      directionsRenderer.setDirections({ routes: [] });
       markers.forEach(m => m.setMap(null));
       markers = [];
+      polylines.forEach(p => p.setMap(null));
+      polylines = [];
+      mostrarHistorial();
+      mostrarDistanciaTotal();
+    }
+
+    // =====================
+    //   RUTAS DESDE BACKEND
+    // =====================
+    async function mostrarRutasConductor() {
+      const cedula = document.getElementById("inputCedula").value;
+      if (!cedula) {
+        alert("Por favor ingrese el número de identificación del conductor");
+        return;
+      }
+
+      clearAll();
+      const response = await fetch(`http://localhost:8080/api/trayectos/conductor/${cedula}`);
+      if (!response.ok) {
+        alert("No se encontraron rutas para este conductor");
+        return;
+      }
+
+      const trayectos = await response.json();
+      const path = trayectos.map(t => ({ lat: t.latitud, lng: t.longitud }));
+
+      const polyline = new google.maps.Polyline({
+        path,
+        map,
+        strokeColor: "#007bff",
+        strokeOpacity: 0.8,
+        strokeWeight: 4
+      });
+      polylines.push(polyline);
+
+      trayectos.forEach(t => {
+        const marker = new google.maps.Marker({
+          position: { lat: t.latitud, lng: t.longitud },
+          map,
+          title: `${t.ubicacion} (${t.ruta.codigo})`
+        });
+        markers.push(marker);
+      });
+
+      map.fitBounds(new google.maps.LatLngBounds(...path.map(p => new google.maps.LatLng(p))));
+    }
+
+    async function mostrarRutasRestringidas() {
+      clearAll();
+      const response = await fetch(`http://localhost:8080/api/trayectos/restricciones`);
+      if (!response.ok) {
+        alert("No hay rutas restringidas");
+        return;
+      }
+
+      const trayectos = await response.json();
+      const path = trayectos.map(t => ({ lat: t.latitud, lng: t.longitud }));
+
+      const polyline = new google.maps.Polyline({
+        path,
+        map,
+        strokeColor: "#ff0000",
+        strokeOpacity: 0.8,
+        strokeWeight: 4
+      });
+      polylines.push(polyline);
+
+      trayectos.forEach(t => {
+        const marker = new google.maps.Marker({
+          position: { lat: t.latitud, lng: t.longitud },
+          map,
+          icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+          title: `Restricción: ${t.ubicacion}`
+        });
+        markers.push(marker);
+      });
+
+      map.fitBounds(new google.maps.LatLngBounds(...path.map(p => new google.maps.LatLng(p))));
     }
 </script>
-
-<!-- Carga del API de Google Maps -->
-<script async
-        src="https://maps.googleapis.com/maps/api/js?AIzaSyCfjRseAP7-5imP790nfukJGGAXB0Ft-zA&libraries=places&callback=initMap">
-</script>
-
 </body>
 </html>

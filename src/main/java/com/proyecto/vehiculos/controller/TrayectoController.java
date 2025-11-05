@@ -64,4 +64,39 @@ public class TrayectoController {
             return ResponseEntity.internalServerError().body("Error al guardar los trayectos: " + e.getMessage());
         }
     }
+    // === NUEVO MÉTODO ===
+    @GetMapping("/conductor/{numeroIdentificacion}")
+    public ResponseEntity<?> obtenerRutasPorConductor(@PathVariable String numeroIdentificacion) {
+        List<Trayecto> trayectos = trayectoRepository.findAll();
+
+        // Filtrar trayectos que pertenezcan al conductor
+        List<String> rutasConductor = trayectos.stream()
+                .filter(t -> t.getPersona() != null &&
+                        t.getPersona().getNumeroIdentificacion().equalsIgnoreCase(numeroIdentificacion))
+                .map(t -> t.getRuta().getCodigo() + " - " + t.getRuta().getDescripcion())
+                .distinct()
+                .toList();
+
+        if (rutasConductor.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(rutasConductor);
+    }
+    @GetMapping("/restricciones")
+    public ResponseEntity<?> obtenerTrayectosRestringidos() {
+        List<Trayecto> trayectos = trayectoRepository.findAll();
+
+        List<Trayecto> restringidos = trayectos.stream()
+                .filter(t -> t.getVehiculo() == null || t.getPersona() == null)
+                .toList();
+
+        if (restringidos.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(restringidos);
+    }
+
+
 }

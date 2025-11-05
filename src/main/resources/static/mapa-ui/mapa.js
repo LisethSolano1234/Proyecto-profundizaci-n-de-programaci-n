@@ -165,6 +165,31 @@ function saveRoute() {
         console.error(err);
         alert("Error al cargar historial de rutas.");
       }
+      async function verRutaGuardada() {
+        const codigoRuta = "RUTA-002"; // puedes hacerlo dinámico más adelante
+
+        const response = await fetch(`http://localhost:8080/api/trayectos/ruta/${codigoRuta}`);
+        const trayectos = await response.json();
+
+        trayectos.forEach(t => {
+          new google.maps.Marker({
+            position: { lat: t.latitud, lng: t.longitud },
+            map: map,
+            title: t.ubicacion
+          });
+        });
+
+        // Si quieres unirlos con una línea (polilínea):
+        const recorrido = trayectos.map(t => ({ lat: t.latitud, lng: t.longitud }));
+        new google.maps.Polyline({
+          path: recorrido,
+          map: map,
+          strokeColor: "#007bff",
+          strokeOpacity: 0.8,
+          strokeWeight: 3
+        });
+      }
+
     });
 
   });

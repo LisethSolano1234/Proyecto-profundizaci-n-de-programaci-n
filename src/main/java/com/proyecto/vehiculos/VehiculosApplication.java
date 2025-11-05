@@ -13,3 +13,4 @@ public class VehiculosApplication {
         System.out.println(" Aplicación iniciada correctamente con tareas programadas habilitadas.");
     }
 }
+
